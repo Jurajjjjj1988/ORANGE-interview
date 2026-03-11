@@ -1,105 +1,63 @@
-# Orange SK — E2E Test Suite
+# Orange SK — Test Suite
 
-![Playwright](https://img.shields.io/badge/Playwright-1.x-2EAD33?logo=playwright&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)
-![CI](https://img.shields.io/badge/CI-GitHub_Actions_(planned)-2088FF?logo=github-actions&logoColor=white)
+Testy pre e-shop **orange.sk**. Repozitár pokrýva dve oblasti:
 
----
-
-## O projekte / About
-
-**SK:** Automatizované end-to-end testy pre e-shop [orange.sk](https://www.orange.sk).
-Pokrývajú kompletný nákupný flow — od výberu telefónu až po vyplnenie osobných údajov v pokladni.
-
-**EN:** Automated end-to-end tests for the [orange.sk](https://www.orange.sk) e-shop.
-Covers the full purchase flow — from phone selection to personal details at checkout.
+- **E2E testy** (Playwright) — nákupný flow od výberu telefónu po checkout
+- **API testy** (Postman) — Genesys widget a Callback24 na `/e-shop/telefony`
 
 ---
 
-## Štruktúra projektu / Project Structure
+## Štruktúra projektu
 
 ```
-CLAUDE/
+ORANGE-interview/
 ├── pages/
-│   ├── HomePage.ts        # Úvodná stránka, cookie banner
-│   ├── PhonesPage.ts      # Zoznam telefónov, filter, zoradenie
-│   ├── ProductPage.ts     # Detail produktu, overenie ceny
-│   ├── CartPage.ts        # Košík, výber SIM, pridanie služieb
-│   └── CheckoutPage.ts    # Pokladňa, osobné údaje, Selectize autocomplete
-├── test.spec.ts           # Hlavný test scenár
-├── playwright.config.ts   # Globálna konfigurácia timeoutov
+│   ├── HomePage.ts          # homepage, cookie banner
+│   ├── PhonesPage.ts        # zoznam telefónov, filter, zoradenie
+│   ├── ProductPage.ts       # detail produktu, overenie ceny
+│   ├── CartPage.ts          # košík, výber SIM, pridanie služieb
+│   └── CheckoutPage.ts      # pokladňa, osobné údaje, Selectize autocomplete
+├── test.spec.ts
+├── playwright.config.ts
+├── api-tests/
+│   ├── collections/
+│   │   └── orange-sk-eshop.postman_collection.json
+│   └── environments/
+│       └── production.postman_environment.json
 ├── CHANGELOG.md
 └── README.md
 ```
 
 ---
 
-## Inštalácia / Installation
+## E2E testy (Playwright)
+
+### Inštalácia
 
 ```bash
-# Klonovanie repozitára
 git clone <repo-url>
-cd CLAUDE
-
-# Inštalácia závislostí
+cd ORANGE-interview
 npm install
-
-# Inštalácia Playwright browserov
 npx playwright install chromium
 ```
 
----
-
-## Spustenie testov / Running Tests
+### Spustenie
 
 ```bash
-# Headless (CI)
-npx playwright test
-
-# Headed (vizuálne ladenie)
-npx playwright test --headed
-
-# Konkrétny súbor
-npx playwright test test.spec.ts
-
-# S trace pre debugging
-npx playwright test --trace on
-
-# HTML report
+npx playwright test                 # headless
+npx playwright test --headed        # s prehliadačom
+npx playwright test --trace on      # s trace pre debug
 npx playwright show-report
 ```
 
----
+### Scenár — Nákup iPhone 17 Pro Max
 
-## Test scenáre / Test Scenarios
+Pokrytý celý flow: homepage → akceptovanie cookies → stránka telefónov → zoradenie podľa ceny → výber paušálu → detail produktu → overenie ceny → košík → eSIM → doplnkové služby → checkout → osobné údaje.
 
-### `test.spec.ts` — Nákup iPhone 17 Pro Max
-
-| Krok | Popis |
-|------|-------|
-| 1 | Otvorenie homepage a akceptovanie cookie bannera |
-| 2 | Overenie načítania homepage |
-| 3 | Navigácia na stránku telefónov |
-| 4 | Zoradenie podľa ceny zostupne |
-| 5 | Výber paušálu (Veľký paušál) |
-| 6 | Kliknutie na produkt iPhone 17 Pro Max |
-| 7 | Overenie ceny na stránke produktu |
-| 8 | Pridanie do košíka |
-| 9 | Výber Elektronickej SIM |
-| 10 | Pridanie doplnkových služieb |
-| 11 | Prechod na checkout |
-| 12 | Vyplnenie osobných údajov (meno, adresa, kontakt) |
-| 13 | Odoslanie objednávky |
-
----
-
-## Page Object Model
-
-Každá stránka má samostatnú triedu v `/pages/`. Triedy zapuzdrujú selektory a akcie — test samotný obsahuje len business logiku.
+### Page Object Model
 
 ```
-Test (test.spec.ts)
+test.spec.ts
   └── HomePage      → goto(), acceptCookies(), navigateToPhones()
   └── PhonesPage    → sortBy(), selectTariff(), clickPhone()
   └── ProductPage   → verifyLoaded(), verifyPrice(), addToCart()
@@ -107,44 +65,56 @@ Test (test.spec.ts)
   └── CheckoutPage  → fillPersonalDetails(), submit()
 ```
 
+Selektory a akcie sú zapuzdrené v triedach — `test.spec.ts` obsahuje len business logiku. Test dáta sú konštanty priamo v teste, nie v Page Objects.
+
+### Timeouty (`playwright.config.ts`)
+
+| | |
+|---|---|
+| Test celkovo | 120 000 ms |
+| Každá akcia | 15 000 ms |
+| Navigácia | 30 000 ms |
+
 ---
 
-## Konfigurácia / Configuration
+## API testy (Postman)
 
-`playwright.config.ts`:
+Endpointy boli zdokumentované z HAR zachytenia reálnej prevádzky — Swagger pre túto časť webu jednoducho neexistuje.
 
-```ts
-timeout: 120000        // Celkový limit na test
-actionTimeout: 15000   // Každá akcia (click, fill, waitFor)
-navigationTimeout: 30000  // Navigácie a waitForLoadState
+### Pokryté endpointy
+
+| Endpoint | Popis |
+|----------|-------|
+| `GET /fileadmin/genesys/widget-config-prod.json` | konfigurácia Genesys widgetu |
+| `GET /fileadmin/genesys/widgets-sk.i18n.json` | i18n preklady |
+| `GET srv-e01.callback24.io/.../ESHOP-TELEFONY1/EN` | stav Callback24 služby |
+
+Kolekcia má 8 requestov: `[SMOKE]` dostupnosť, `[FUNC+DATA]` obsah a formáty, `[PERF]` SLA limity, `[NEG]` chybové stavy.
+
+### Spustenie cez Newman
+
+```bash
+npm install -g newman
+newman run api-tests/collections/orange-sk-eshop.postman_collection.json \
+  -e api-tests/environments/production.postman_environment.json
 ```
 
-Test dáta sú definované ako konštanty v `test.spec.ts` — žiadne hardcoded hodnoty v Page Objects.
+---
+
+## Known issues
+
+**Livewire filtre (E2E)** — zoradenie a výber paušálu triggerujú AJAX cez Livewire. Po každej zmene treba `waitForLoadState('networkidle')` + `waitForTimeout(2000)`, inak testy občas failujú na race condition.
+
+**Selectize dropdowns (E2E)** — polia pre mesto a ulicu nie sú štandardné `<select>`. Funguje `.selectize-control input[type="text"]` + `type({ delay: 150 })` kvôli spoľahlivému triggrovaniu autocomplete.
+
+**Cookie banner (E2E)** — text tlačidla sa líši podľa A/B testu, riešené cez `Promise.race()` s viacerými kandidátmi.
+
+**Dynamické ceny (E2E)** — závisí od zvoleného paušálu, preto overujem len formát `/\d+\s*€/`.
+
+**DEFECT CB24-001 (API)** — Callback24 vracia HTTP 200 pre neexistujúci service ID, ale pole `status` v odpovedi chýba namiesto `false`. Test to loguje ako `console.warn` a nepretrhne pipeline. Chyba je na strane vendora.
+
+`POST /e-shop/livewire/update` nie je pokrytý — vyžaduje CSRF token zo živej session.
 
 ---
 
-## Known Issues
-
-### Livewire komponenty
-Filtre (zoradenie, výber paušálu) sú Livewire komponenty — po zmene spúšťajú AJAX na vlastný endpoint (nie `/telefony`).
-**Riešenie:** `waitForLoadState('networkidle')` + `waitForTimeout(2000)` po každej zmene.
-
-### Selectize dropdowns
-Autocomplete polia pre mesto a ulicu nie sú štandardné `<select>` elementy — Playwright ich nedokáže ovládať cez `getByRole('combobox')`.
-**Riešenie:** `locator('.selectize-control').locator('input[type="text"]')` + `type({ delay: 150 })` pre spoľahlivé triggrovanie autocomplete.
-
-### Cookie banner
-Text tlačidla sa môže líšiť podľa A/B testu alebo jazykovej varianty.
-**Riešenie:** `Promise.race()` s viacerými kandidátmi + `try/catch` fallback.
-
-### Dynamické ceny
-Ceny sa menia podľa zvoleného paušálu.
-**Riešenie:** Overujeme len formát `/\d+\s*€/`, nikdy konkrétnu hodnotu.
-
----
-
-## Autor / Author
-
-**Juraj Kapušanský**
-QA Automation Engineer
-
+Juraj Kapušanský — QA Automation Engineer
