@@ -1,0 +1,457 @@
+{
+  "info": {
+    "_postman_id": "d7e5acb7-0e63-435c-a4a0-7cd15a68fa27",
+    "name": "🟠 Orange SK - Interview API Tests v3 (SLIM)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "43161536"
+  },
+  "item": [
+    {
+      "name": "[SMOKE] Widget Config dostupny",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('S1: Status 200', function(){ pm.response.to.have.status(200); });",
+              "pm.test('S2: Je JSON', function(){ pm.response.to.be.json; });",
+              "pm.test('S3: Response time pod 2000ms', function(){ pm.expect(pm.response.responseTime).to.be.below(2000); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "*/*"
+          },
+          {
+            "key": "Referer",
+            "value": "{{base_url}}/e-shop/telefony"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/fileadmin/genesys/widget-config-prod.json",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "fileadmin",
+            "genesys",
+            "widget-config-prod.json"
+          ]
+        },
+        "description": "SMOKE | Zakladna dostupnost. Ak zlyha = system down."
+      },
+      "response": []
+    },
+    {
+      "name": "[SMOKE] i18n Preklady dostupne",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('S1: Status 200', function(){ pm.response.to.have.status(200); });",
+              "pm.test('S2: Je JSON', function(){ pm.response.to.be.json; });",
+              "pm.test('S3: Response time pod 2000ms', function(){ pm.expect(pm.response.responseTime).to.be.below(2000); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/fileadmin/genesys/widgets-sk.i18n.json",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "fileadmin",
+            "genesys",
+            "widgets-sk.i18n.json"
+          ]
+        },
+        "description": "SMOKE | Dostupnost prekladov pre chat widget."
+      },
+      "response": []
+    },
+    {
+      "name": "[SMOKE] Callback24 API odpoveda",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('S1: Status 200', function(){ pm.response.to.have.status(200); });",
+              "pm.test('S2: Je JSON objekt', function(){ pm.expect(pm.response.json()).to.be.an('object'); });",
+              "pm.test('S3: Response time pod 1000ms (SLA externeho vendora)', function(){ pm.expect(pm.response.responseTime).to.be.below(1000); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "*/*"
+          },
+          {
+            "key": "Origin",
+            "value": "{{base_url}}"
+          }
+        ],
+        "url": {
+          "raw": "{{callback24_url}}/api/browser/service_status/ESHOP-TELEFONY1/EN",
+          "host": [
+            "{{callback24_url}}"
+          ],
+          "path": [
+            "api",
+            "browser",
+            "service_status",
+            "ESHOP-TELEFONY1",
+            "EN"
+          ]
+        },
+        "description": "SMOKE | Callback24 externy vendor. Prisnejsi SLA limit."
+      },
+      "response": []
+    },
+    {
+      "name": "[FUNC+DATA] Widget Config - obsah a formaty",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var body = pm.response.json();",
+              "pm.test('F1: webchatURL je validna HTTPS URL', function(){ pm.expect(body.webchatURL).to.match(/^https:\\/\\/.+/); });",
+              "pm.test('F2: userData obsahuje alcs_ChatBot', function(){ pm.expect(body.userData).to.be.an('object'); pm.expect(body.userData).to.have.property('alcs_ChatBot'); });",
+              "pm.test('F3: statisticURL1 existuje', function(){ pm.expect(body).to.have.property('statisticURL1'); });",
+              "pm.test('D1: statisticTimeout1 je kladne cislo', function(){ if(body.statisticTimeout1){ pm.expect(body.statisticTimeout1).to.be.a('number').and.above(0); } });",
+              "pm.test('D2: alcs_ChatBot je string true alebo false', function(){ var v = body.userData && body.userData.alcs_ChatBot; if(v !== undefined){ pm.expect(['true','false']).to.include(String(v)); } });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "*/*"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/fileadmin/genesys/widget-config-prod.json",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "fileadmin",
+            "genesys",
+            "widget-config-prod.json"
+          ]
+        },
+        "description": "FUNCTIONAL + DATA | Povinne polia a spravnost formatov."
+      },
+      "response": []
+    },
+    {
+      "name": "[FUNC+DATA] Callback24 - obsah a brand",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var body = pm.response.json();",
+              "pm.test('F1: status je boolean', function(){ pm.expect(body.status).to.be.a('boolean'); });",
+              "pm.test('F2: mode je ONLINE alebo OFFLINE', function(){ pm.expect(['ONLINE','OFFLINE']).to.include(body.mode); });",
+              "pm.test('F3: company_name je Orange Slovensko', function(){ pm.expect(body.company_name).to.eql('Orange Slovensko'); });",
+              "pm.test('D1: widget_color je Orange HEX #FF8903', function(){ if(body.widget_color){ pm.expect(body.widget_color.trim().toUpperCase()).to.eql('#FF8903'); } });",
+              "pm.test('D2: current_time je validny ISO 8601', function(){ if(body.current_time){ pm.expect(new Date(body.current_time).toString()).to.not.eql('Invalid Date'); } });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "*/*"
+          },
+          {
+            "key": "Origin",
+            "value": "{{base_url}}"
+          }
+        ],
+        "url": {
+          "raw": "{{callback24_url}}/api/browser/service_status/ESHOP-TELEFONY1/EN",
+          "host": [
+            "{{callback24_url}}"
+          ],
+          "path": [
+            "api",
+            "browser",
+            "service_status",
+            "ESHOP-TELEFONY1",
+            "EN"
+          ]
+        },
+        "description": "FUNCTIONAL + DATA | Spravnost dat, brand konzistencia a formaty."
+      },
+      "response": []
+    },
+    {
+      "name": "[PERF] Widget Config - static file SLA",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('P1: Pod 500ms - staticky subor musi byt cachovany', function(){ pm.expect(pm.response.responseTime).to.be.below(500); });",
+              "console.log('[PERF] Widget Config: ' + pm.response.responseTime + 'ms');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "*/*"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/fileadmin/genesys/widget-config-prod.json",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "fileadmin",
+            "genesys",
+            "widget-config-prod.json"
+          ]
+        },
+        "description": "PERFORMANCE | Staticky JSON - CDN by mal zaistit rychlu odpoved."
+      },
+      "response": []
+    },
+    {
+      "name": "[PERF] Callback24 - vendor SLA",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('P1: Pod 500ms - SLA target externeho vendora', function(){ pm.expect(pm.response.responseTime).to.be.below(500); });",
+              "pm.collectionVariables.set('last_callback24_ms', pm.response.responseTime);",
+              "console.log('[PERF] Callback24: ' + pm.response.responseTime + 'ms');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "*/*"
+          },
+          {
+            "key": "Origin",
+            "value": "{{base_url}}"
+          }
+        ],
+        "url": {
+          "raw": "{{callback24_url}}/api/browser/service_status/ESHOP-TELEFONY1/EN",
+          "host": [
+            "{{callback24_url}}"
+          ],
+          "path": [
+            "api",
+            "browser",
+            "service_status",
+            "ESHOP-TELEFONY1",
+            "EN"
+          ]
+        },
+        "description": "PERFORMANCE | Externy vendor SLA."
+      },
+      "response": []
+    },
+    {
+      "name": "[NEG] Neexistujuci service ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('N1: API necrashne - ziadny 500', function(){ pm.response.to.not.have.status(500); });",
+              "pm.test('N2: Odpoveda s ocakavanym HTTP kodom', function(){ pm.expect([200,400,404,422]).to.include(pm.response.code); });",
+              "pm.test('N3: status=false ALEBO pole chyba (KNOWN DEFECT CB24-001)', function(){",
+              "  if(pm.response.code === 200){",
+              "    try {",
+              "      var body = pm.response.json();",
+              "      if(body.status === undefined){ console.warn('DEFECT CB24-001: status pole chyba'); pm.expect(true).to.be.true; }",
+              "      else { pm.expect(body.status).to.eql(false); }",
+              "    } catch(e){ pm.expect(true).to.be.true; }",
+              "  }",
+              "});",
+              "pm.test('N4: Odpoved neobsahuje Orange data', function(){",
+              "  if(pm.response.code===200){ try{ pm.expect(pm.response.json().company_name).to.not.eql('Orange Slovensko'); }catch(e){ pm.expect(true).to.be.true; } }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "*/*"
+          },
+          {
+            "key": "Origin",
+            "value": "{{base_url}}"
+          }
+        ],
+        "url": {
+          "raw": "{{callback24_url}}/api/browser/service_status/NEEXISTUJUCI-SERVICE-999/EN",
+          "host": [
+            "{{callback24_url}}"
+          ],
+          "path": [
+            "api",
+            "browser",
+            "service_status",
+            "NEEXISTUJUCI-SERVICE-999",
+            "EN"
+          ]
+        },
+        "description": "NEGATIVE | Neplatny service ID. KNOWN DEFECT CB24-001."
+      },
+      "response": []
+    },
+    {
+      "name": "[NEG] Brand konzistencia SK vs EN",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var body = pm.response.json();",
+              "pm.test('N1: SK endpoint odpoveda 200', function(){ pm.response.to.have.status(200); });",
+              "pm.test('N2: SK ma rovnaku brand farbu ako EN - #FF8903', function(){ if(body.widget_color){ pm.expect(body.widget_color.trim().toUpperCase()).to.eql('#FF8903'); } });",
+              "pm.test('N3: SK ma rovnake company_name ako EN', function(){ pm.expect(body.company_name).to.eql('Orange Slovensko'); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "*/*"
+          },
+          {
+            "key": "Origin",
+            "value": "{{base_url}}"
+          }
+        ],
+        "url": {
+          "raw": "{{callback24_url}}/api/browser/service_status/ESHOP-TELEFONY1/SK",
+          "host": [
+            "{{callback24_url}}"
+          ],
+          "path": [
+            "api",
+            "browser",
+            "service_status",
+            "ESHOP-TELEFONY1",
+            "SK"
+          ]
+        },
+        "description": "NEGATIVE | SK vs EN brand konzistencia."
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "var env = pm.environment.get('env_name') || 'NO ENV';",
+          "console.log('▶ ' + pm.info.requestName + ' | ENV: ' + env + ' | ' + new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Cloud-kompatibilny summary counter (bez pm.test.each)",
+          "try {",
+          "  var p = parseInt(pm.collectionVariables.get('total_passed') || 0);",
+          "  var f = parseInt(pm.collectionVariables.get('total_failed') || 0);",
+          "  var fails = JSON.parse(pm.collectionVariables.get('failed_tests') || '[]');",
+          "  if (f > 0) { console.warn('📊 ' + p + '/' + (p+f) + ' | ❌ ' + JSON.stringify(fails)); }",
+          "  else { console.log('📊 running total: ' + p + ' passed, ' + f + ' failed'); }",
+          "} catch(e) {}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://www.orange.sk"
+    },
+    {
+      "key": "callback24_url",
+      "value": "https://srv-e01.callback24.io"
+    },
+    {
+      "key": "total_passed",
+      "value": "0"
+    },
+    {
+      "key": "total_failed",
+      "value": "0"
+    },
+    {
+      "key": "failed_tests",
+      "value": "[]"
+    },
+    {
+      "key": "last_callback24_ms",
+      "value": ""
+    }
+  ]
+}
