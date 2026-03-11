@@ -147,4 +147,4 @@ Ceny sa menia podľa zvoleného paušálu.
 
 **Juraj Kapušanský**
 QA Automation Engineer
-[github.com/kapusansky](https://github.com/kapusansky)
+
