@@ -16,7 +16,9 @@
             "exec": [
               "pm.test('S1: Status 200', function(){ pm.response.to.have.status(200); });",
               "pm.test('S2: Je JSON', function(){ pm.response.to.be.json; });",
-              "pm.test('S3: Response time pod 2000ms', function(){ pm.expect(pm.response.responseTime).to.be.below(2000); });"
+              "pm.test('S3: Response time pod ' + pm.environment.get('perf_smoke_threshold_ms') + 'ms', function(){",
+              "  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.environment.get('perf_smoke_threshold_ms')));",
+              "});"
             ]
           }
         }
@@ -58,7 +60,9 @@
             "exec": [
               "pm.test('S1: Status 200', function(){ pm.response.to.have.status(200); });",
               "pm.test('S2: Je JSON', function(){ pm.response.to.be.json; });",
-              "pm.test('S3: Response time pod 2000ms', function(){ pm.expect(pm.response.responseTime).to.be.below(2000); });"
+              "pm.test('S3: Response time pod ' + pm.environment.get('perf_smoke_threshold_ms') + 'ms', function(){",
+              "  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.environment.get('perf_smoke_threshold_ms')));",
+              "});"
             ]
           }
         }
@@ -96,7 +100,9 @@
             "exec": [
               "pm.test('S1: Status 200', function(){ pm.response.to.have.status(200); });",
               "pm.test('S2: Je JSON objekt', function(){ pm.expect(pm.response.json()).to.be.an('object'); });",
-              "pm.test('S3: Response time pod 1000ms (SLA externeho vendora)', function(){ pm.expect(pm.response.responseTime).to.be.below(1000); });"
+              "pm.test('S3: Response time pod ' + pm.environment.get('perf_callback24_sla_ms') + 'ms (SLA externeho vendora)', function(){",
+              "  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.environment.get('perf_callback24_sla_ms')));",
+              "});"
             ]
           }
         }
@@ -114,7 +120,7 @@
           }
         ],
         "url": {
-          "raw": "{{callback24_url}}/api/browser/service_status/ESHOP-TELEFONY1/EN",
+          "raw": "{{callback24_url}}/api/browser/service_status/{{callback24_service_id}}/EN",
           "host": [
             "{{callback24_url}}"
           ],
@@ -122,7 +128,7 @@
             "api",
             "browser",
             "service_status",
-            "ESHOP-TELEFONY1",
+            "{{callback24_service_id}}",
             "EN"
           ]
         },
@@ -180,10 +186,12 @@
             "type": "text/javascript",
             "exec": [
               "var body = pm.response.json();",
+              "var expectedCompany = pm.environment.get('expected_company_name');",
+              "var expectedColor = pm.environment.get('brand_color');",
               "pm.test('F1: status je boolean', function(){ pm.expect(body.status).to.be.a('boolean'); });",
               "pm.test('F2: mode je ONLINE alebo OFFLINE', function(){ pm.expect(['ONLINE','OFFLINE']).to.include(body.mode); });",
-              "pm.test('F3: company_name je Orange Slovensko', function(){ pm.expect(body.company_name).to.eql('Orange Slovensko'); });",
-              "pm.test('D1: widget_color je Orange HEX #FF8903', function(){ if(body.widget_color){ pm.expect(body.widget_color.trim().toUpperCase()).to.eql('#FF8903'); } });",
+              "pm.test('F3: company_name je ' + expectedCompany, function(){ pm.expect(body.company_name).to.eql(expectedCompany); });",
+              "pm.test('D1: widget_color je ' + expectedColor, function(){ if(body.widget_color){ pm.expect(body.widget_color.trim().toUpperCase()).to.eql(expectedColor.toUpperCase()); } });",
               "pm.test('D2: current_time je validny ISO 8601', function(){ if(body.current_time){ pm.expect(new Date(body.current_time).toString()).to.not.eql('Invalid Date'); } });"
             ]
           }
@@ -202,7 +210,7 @@
           }
         ],
         "url": {
-          "raw": "{{callback24_url}}/api/browser/service_status/ESHOP-TELEFONY1/EN",
+          "raw": "{{callback24_url}}/api/browser/service_status/{{callback24_service_id}}/EN",
           "host": [
             "{{callback24_url}}"
           ],
@@ -210,7 +218,7 @@
             "api",
             "browser",
             "service_status",
-            "ESHOP-TELEFONY1",
+            "{{callback24_service_id}}",
             "EN"
           ]
         },
@@ -226,8 +234,11 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('P1: Pod 500ms - staticky subor musi byt cachovany', function(){ pm.expect(pm.response.responseTime).to.be.below(500); });",
-              "console.log('[PERF] Widget Config: ' + pm.response.responseTime + 'ms');"
+              "var threshold = parseInt(pm.environment.get('perf_widget_threshold_ms'));",
+              "pm.test('P1: Pod ' + threshold + 'ms - staticky subor musi byt cachovany', function(){",
+              "  pm.expect(pm.response.responseTime).to.be.below(threshold);",
+              "});",
+              "console.log('[PERF] Widget Config: ' + pm.response.responseTime + 'ms (limit: ' + threshold + 'ms)');"
             ]
           }
         }
@@ -263,9 +274,12 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('P1: Pod 500ms - SLA target externeho vendora', function(){ pm.expect(pm.response.responseTime).to.be.below(500); });",
+              "var threshold = parseInt(pm.environment.get('perf_callback24_sla_ms'));",
+              "pm.test('P1: Pod ' + threshold + 'ms - SLA target externeho vendora', function(){",
+              "  pm.expect(pm.response.responseTime).to.be.below(threshold);",
+              "});",
               "pm.collectionVariables.set('last_callback24_ms', pm.response.responseTime);",
-              "console.log('[PERF] Callback24: ' + pm.response.responseTime + 'ms');"
+              "console.log('[PERF] Callback24: ' + pm.response.responseTime + 'ms (limit: ' + threshold + 'ms)');"
             ]
           }
         }
@@ -283,7 +297,7 @@
           }
         ],
         "url": {
-          "raw": "{{callback24_url}}/api/browser/service_status/ESHOP-TELEFONY1/EN",
+          "raw": "{{callback24_url}}/api/browser/service_status/{{callback24_service_id}}/EN",
           "host": [
             "{{callback24_url}}"
           ],
@@ -291,7 +305,7 @@
             "api",
             "browser",
             "service_status",
-            "ESHOP-TELEFONY1",
+            "{{callback24_service_id}}",
             "EN"
           ]
         },
@@ -319,7 +333,8 @@
               "  }",
               "});",
               "pm.test('N4: Odpoved neobsahuje Orange data', function(){",
-              "  if(pm.response.code===200){ try{ pm.expect(pm.response.json().company_name).to.not.eql('Orange Slovensko'); }catch(e){ pm.expect(true).to.be.true; } }",
+              "  var expectedCompany = pm.environment.get('expected_company_name');",
+              "  if(pm.response.code===200){ try{ pm.expect(pm.response.json().company_name).to.not.eql(expectedCompany); }catch(e){ pm.expect(true).to.be.true; } }",
               "});"
             ]
           }
@@ -355,7 +370,7 @@
       "response": []
     },
     {
-      "name": "[NEG] Brand konzistencia SK vs EN",
+      "name": "[FUNC] Brand konzistencia SK vs EN",
       "event": [
         {
           "listen": "test",
@@ -363,9 +378,11 @@
             "type": "text/javascript",
             "exec": [
               "var body = pm.response.json();",
+              "var expectedCompany = pm.environment.get('expected_company_name');",
+              "var expectedColor = pm.environment.get('brand_color');",
               "pm.test('N1: SK endpoint odpoveda 200', function(){ pm.response.to.have.status(200); });",
-              "pm.test('N2: SK ma rovnaku brand farbu ako EN - #FF8903', function(){ if(body.widget_color){ pm.expect(body.widget_color.trim().toUpperCase()).to.eql('#FF8903'); } });",
-              "pm.test('N3: SK ma rovnake company_name ako EN', function(){ pm.expect(body.company_name).to.eql('Orange Slovensko'); });"
+              "pm.test('N2: SK ma rovnaku brand farbu ako EN - ' + expectedColor, function(){ if(body.widget_color){ pm.expect(body.widget_color.trim().toUpperCase()).to.eql(expectedColor.toUpperCase()); } });",
+              "pm.test('N3: SK ma rovnake company_name ako EN', function(){ pm.expect(body.company_name).to.eql(expectedCompany); });"
             ]
           }
         }
@@ -383,7 +400,7 @@
           }
         ],
         "url": {
-          "raw": "{{callback24_url}}/api/browser/service_status/ESHOP-TELEFONY1/SK",
+          "raw": "{{callback24_url}}/api/browser/service_status/{{callback24_service_id}}/SK",
           "host": [
             "{{callback24_url}}"
           ],
@@ -391,11 +408,11 @@
             "api",
             "browser",
             "service_status",
-            "ESHOP-TELEFONY1",
+            "{{callback24_service_id}}",
             "SK"
           ]
         },
-        "description": "NEGATIVE | SK vs EN brand konzistencia."
+        "description": "FUNCTIONAL | SK vs EN brand konzistencia."
       },
       "response": []
     }
@@ -410,22 +427,6 @@
           "console.log('▶ ' + pm.info.requestName + ' | ENV: ' + env + ' | ' + new Date().toISOString());"
         ]
       }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "// Cloud-kompatibilny summary counter (bez pm.test.each)",
-          "try {",
-          "  var p = parseInt(pm.collectionVariables.get('total_passed') || 0);",
-          "  var f = parseInt(pm.collectionVariables.get('total_failed') || 0);",
-          "  var fails = JSON.parse(pm.collectionVariables.get('failed_tests') || '[]');",
-          "  if (f > 0) { console.warn('📊 ' + p + '/' + (p+f) + ' | ❌ ' + JSON.stringify(fails)); }",
-          "  else { console.log('📊 running total: ' + p + ' passed, ' + f + ' failed'); }",
-          "} catch(e) {}"
-        ]
-      }
     }
   ],
   "variable": [
@@ -436,18 +437,6 @@
     {
       "key": "callback24_url",
       "value": "https://srv-e01.callback24.io"
-    },
-    {
-      "key": "total_passed",
-      "value": "0"
-    },
-    {
-      "key": "total_failed",
-      "value": "0"
-    },
-    {
-      "key": "failed_tests",
-      "value": "[]"
     },
     {
       "key": "last_callback24_ms",
