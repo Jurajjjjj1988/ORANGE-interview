@@ -16,7 +16,7 @@ export class CartPage {
     await locator.waitFor({ state: 'visible' });
     await expect(locator).toBeEnabled();
     await locator.click();
-    await this.page.waitForTimeout(1500);
+    await locator.waitFor({ state: 'detached' }).catch(() => {});
   }
 
   async addServices() {

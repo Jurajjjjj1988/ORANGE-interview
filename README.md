@@ -17,6 +17,8 @@ ORANGE-interview/
 │   ├── ProductPage.ts       # detail produktu, overenie ceny
 │   ├── CartPage.ts          # košík, výber SIM, pridanie služieb
 │   └── CheckoutPage.ts      # pokladňa, osobné údaje, Selectize autocomplete
+├── data/
+│   └── testData.ts          # testové dáta: zákazník, produkty, tarify
 ├── test.spec.ts
 ├── playwright.config.ts
 ├── api-tests/
@@ -65,7 +67,7 @@ test.spec.ts
   └── CheckoutPage  → fillPersonalDetails(), submit()
 ```
 
-Selektory a akcie sú zapuzdrené v triedach — `test.spec.ts` obsahuje len business logiku. Test dáta sú konštanty priamo v teste, nie v Page Objects.
+Selektory a akcie sú zapuzdrené v triedach — `test.spec.ts` obsahuje len business logiku. Test dáta (zákazník, produkt, tarif) sú centralizované v `data/testData.ts`.
 
 ### Timeouty (`playwright.config.ts`)
 
