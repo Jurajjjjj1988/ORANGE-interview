@@ -221,52 +221,6 @@ HTML stránky obsahujú **dve identické `<nav>` bloky** v DOM — jedno pre des
 
 ---
 
-## BUG-006 — Microservices JSON Parsing Error pri Performance Teste
-
-| | |
-|---|---|
-| **Závažnosť** | 🔴 Critical |
-| **Kategória** | Backend / API Stability |
-| **Dopad** | Výpadok služby pri záťaži |
-
-### Popis
-
-Počas záťažového (performance) testovania bola identifikovaná chyba v JSON parsovaní medzi microservisami. Pri vyššom počte súbežných requestov niektoré microservisy vracajú malformovaný alebo neúplný JSON payload, čo spôsobuje zlyhanie downstream servisov.
-
-### Symptómy
-
-- Intermittentné `JSON parse error` / `Unexpected end of JSON input` v logoch
-- Chyby sa objavujú pri záťaži (>X concurrent users), pri nízkej záťaži nedetekovateľné
-- Downstream servis zlyhá pri pokuse o deserializáciu neúplnej odpovede
-
-### Pravdepodobná príčina
-
-- Race condition alebo buffer overflow v HTTP response streamingu — JSON sa odošle po častiach bez správneho `Content-Length` alebo `Transfer-Encoding: chunked` handlingu
-- Timeout na upstream strane — servis odošle čiastočnú odpoveď pred vypršaním connection timeoutu
-
-### Reprodukcia (performance test scenario)
-
-```
-1. Spustiť záťažový test: 50+ concurrent users na endpoint /api/...
-2. Monitorovať logy downstream servisu
-3. Pozorovať JSON parse errors pri špičkovej záťaži
-```
-
-### Riziko
-
-- Kaskádové zlyhanie microservisov pri špičkovej návštevnosti (napr. promo akcia, Black Friday)
-- Zákazník dostane chybovú stránku namiesto tarify / objednávky
-- Ťažko reprodukovateľné v dev/staging prostredí — objavuje sa iba pri reálnej záťaži
-
-### Odporúčanie
-
-- Pridať JSON schema validáciu na vstupe každého microservisu (`try/catch` + fallback)
-- Auditovať timeout a retry politiku medzi servisami
-- Pridať structured logging pre JSON parse errors s kontextom (endpoint, payload size, timestamp)
-- Zahrnúť do pravidelného performance regression testu
-
----
-
 ## BUG-006 — Callback24 API Vracia Prázdny JSON pri Vysokej Záťaži
 
 | | |
