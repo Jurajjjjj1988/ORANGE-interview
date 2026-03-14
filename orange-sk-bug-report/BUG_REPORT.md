@@ -217,9 +217,7 @@ HTML stránky obsahujú **dve identické `<nav>` bloky** v DOM — jedno pre des
 
 ---
 
-*Juraj Kapusanský — QA Engineer*
 
----
 
 ## BUG-006 — Callback24 API Vracia Prázdny JSON pri Vysokej Záťaži
 
@@ -310,4 +308,7 @@ if (!response || !response.company_name) {
   return DEFAULT_WIDGET_CONFIG;
 }
 ```
+---------------------------------------------------------
+****** JURAJ KAPUSANSKY — AI QA Architect | SDET ******
+
 
