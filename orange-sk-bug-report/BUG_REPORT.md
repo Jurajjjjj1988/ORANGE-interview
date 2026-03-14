@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-Počas analýzy bolo identifikovaných **5 bugov** rôznej závažnosti — od kritických bezpečnostných problémov až po UX a feature parity nedostatky.
+Počas analýzy bolo identifikovaných **6 bugov** rôznej závažnosti — od kritických bezpečnostných problémov až po UX a feature parity nedostatky.
 
 | # | Závažnosť | Kategória | Stručný popis |
 |---|-----------|-----------|---------------|
@@ -18,6 +18,7 @@ Počas analýzy bolo identifikovaných **5 bugov** rôznej závažnosti — od k
 | BUG-003 | 🟠 High | Feature Gap | Chatbot dostupný iba pre B2B zákazníkov, B2C ho nemá |
 | BUG-004 | 🟠 High | Security | Login portál prechádza cez nešifrovaný `http://` kanál |
 | BUG-005 | 🟡 Medium | Accessibility | Duplicitné nav menu, chýbajú ARIA atribúty — WCAG 2.1 porušenie |
+| BUG-006 | 🔴 Critical | External API | Callback24 vracia prázdny JSON pri vysokej záťaži |
 
 ---
 
