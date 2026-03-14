@@ -263,3 +263,96 @@ Počas záťažového (performance) testovania bola identifikovaná chyba v JSON
 - Auditovať timeout a retry politiku medzi servisami
 - Pridať structured logging pre JSON parse errors s kontextom (endpoint, payload size, timestamp)
 - Zahrnúť do pravidelného performance regression testu
+
+---
+
+## BUG-006 — Callback24 API Vracia Prázdny JSON pri Vysokej Záťaži
+
+| | |
+|---|---|
+| **Závažnosť** | 🔴 Critical |
+| **Kategória** | Backend / External API |
+| **Endpoint** | `GET https://srv-e01.callback24.io/api/browser/service_status/ESHOP-TELEFONY1/EN` |
+| **Dopad** | Chat widget sa nenaťahuje, zákazník nevidí support možnosti |
+
+### Popis
+
+Callback24 API endpoint občas vracia **prázdny JSON (`{}`) alebo neúplný JSON payload** pri súbežných requestoch. Při normálnom traffic je OK, ale pri špičkovej záťaži (promo, Black Friday) sa to objavuje.
+
+### Očakávaná odpoveď
+
+```json
+{
+  "status": true,
+  "mode": "ONLINE",
+  "company_name": "Orange Slovensko",
+  "widget_color": "#FF8903",
+  "current_time": "2026-03-14T18:00:00.000Z"
+}
+```
+
+### Problém
+
+Niekedy vracia:
+```json
+{}
+```
+
+Alebo:
+```json
+{
+  "status": true,
+  "mode": "ONLINE"
+  // chýbajú zvyšné polia
+}
+```
+
+### Symptómy
+
+- Frontend JavaScript test `pm.expect(body.status).to.be.a('boolean')` a `pm.expect(body.company_name)` failuje
+- V console: `Cannot read property 'company_name' of undefined`
+- Widget sa nezobrazí — zákazník nevie zavolať support
+- Problém intermittentný — ťažko reprodukovateľný v dev prostredí
+
+### Príčina (Most Likely)
+
+- **Timeout na upstream (Orange → Callback24)** — Orange timeout na 500ms, ale Callback24 niekedy trvá dlhšie pri záťaži
+- **Buffering issue** — HTTP response sa stráca čiastočne pri streamingu
+- **Connection pooling** — недостаточно connections v pool pri high concurrency
+
+### Reprodukcia
+
+```bash
+# Jednotlivý request — funguje OK
+curl https://srv-e01.callback24.io/api/browser/service_status/ESHOP-TELEFONY1/EN | jq .
+
+# Load test — FAIL
+ab -n 100 -c 50 https://srv-e01.callback24.io/api/browser/service_status/ESHOP-TELEFONY1/EN
+# Niektoré requesty vrátia {}
+```
+
+### Riziko
+
+- **Conversion loss** — zákazník bez widgetu nevidie možnosť volať support → opúšťa web
+- **User frustration** — "Ako mám kontaktovať support?" → negative review
+- **Peak traffic failure** — Black Friday, napr. — práve vtedy keď je to najdôležitejšie
+
+### Odporúčanie
+
+1. **Zvýšiť timeout** na Orange → Callback24 komunikácii (minimálne na 2000ms)
+2. **Zvýšiť connection pool size** — teraz pravdepodobne 10, navýšiť na 50–100
+3. **Implementovať fallback** — ak Callback24 vracia `{}`, použiť default config namiesto crash
+4. **Monitoring** — alerty keď Callback24 vracia incomplete JSON
+5. **Load test regularitu** — zahrnúť do CI/CD — skôr ako aby sa zistilo na produkcii
+
+### Temporary Workaround
+
+Pokiaľ čakáte na opravu Callback24:
+```javascript
+// Frontend guard
+if (!response || !response.company_name) {
+  console.warn('Callback24 incomplete response, using fallback');
+  return DEFAULT_WIDGET_CONFIG;
+}
+```
+
