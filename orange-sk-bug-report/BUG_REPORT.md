@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-Počas analýzy bolo identifikovaných **6 bugov** rôznej závažnosti — od kritických bezpečnostných problémov až po UX a feature parity nedostatky.
+Počas mojej analýzy bolo identifikovaných **6 bugov** rôznej závažnosti — od kritických bezpečnostných problémov až po UX a feature parity nedostatky.
 
 | # | Závažnosť | Kategória | Stručný popis |
 |---|-----------|-----------|---------------|
