@@ -1,14 +1,16 @@
 {
-  "name": "orange-test",
+  "name": "orange-test-suite",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Orange.sk security test suite - BUG-004 HTTP downgrade vulnerability tests",
   "devDependencies": {
     "@playwright/test": "^1.58.2"
   }
