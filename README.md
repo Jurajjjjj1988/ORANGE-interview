@@ -1,122 +1,61 @@
-# Orange SK — Test Suite
+# Orange SK — API Test Suite
 
-Testy pre e-shop **orange.sk**. Repozitár pokrýva dve oblasti:
+API tests for orange.sk, focused on the Genesys chat widget and Callback24 vendor integration on `/e-shop/telefony`.
 
-- **E2E testy** (Playwright) — nákupný flow od výberu telefónu po checkout
-- **API testy** (Postman) — Genesys widget a Callback24 na `/e-shop/telefony`
+Endpoints were mapped from HAR traffic capture — no Swagger available for this part of the site.
 
----
-
-## Štruktúra projektu
+## Structure
 
 ```
-ORANGE-interview/
-├── pages/
-│   ├── HomePage.ts          # homepage, cookie banner
-│   ├── PhonesPage.ts        # zoznam telefónov, filter, zoradenie
-│   ├── ProductPage.ts       # detail produktu, overenie ceny
-│   ├── CartPage.ts          # košík, výber SIM, pridanie služieb
-│   └── CheckoutPage.ts      # pokladňa, osobné údaje, Selectize autocomplete
-├── data/
-│   └── testData.ts          # testové dáta: zákazník, produkty, tarify
-├── test.spec.ts
-├── playwright.config.ts
-├── api-tests/
-│   ├── collections/
-│   │   └── orange-sk-eshop.postman_collection.json
-│   └── environments/
-│       └── production.postman_environment.json
-├── CHANGELOG.md
-└── README.md
+api-tests/
+  playwright/          # code-based tests — schema validation + functional
+    schemas/           # Zod schemas for response contracts
+    tests/
+  postman/             # manual collection — useful for quick ad-hoc checks
+    collections/
+    environments/
 ```
 
----
-
-## E2E testy (Playwright)
-
-### Inštalácia
+## Setup
 
 ```bash
-git clone <repo-url>
-cd ORANGE-interview
 npm install
 npx playwright install chromium
 ```
 
-### Spustenie
+Copy `.env.example` to `.env` if you want to override the default endpoints.
+
+## Running tests
 
 ```bash
-npx playwright test                 # headless
-npx playwright test --headed        # s prehliadačom
-npx playwright test --trace on      # s trace pre debug
-npx playwright show-report
+# Playwright API tests (runs in CI)
+npm test
+
+# Postman via Newman
+npm run test:postman
 ```
 
-### Scenár — Nákup iPhone 17 Pro Max
+## What's covered
 
-Pokrytý celý flow: homepage → akceptovanie cookies → stránka telefónov → zoradenie podľa ceny → výber paušálu → detail produktu → overenie ceny → košík → eSIM → doplnkové služby → checkout → osobné údaje.
+**Playwright (`api-tests/playwright/tests/`)**
 
-### Page Object Model
+| File                        | What it tests                                     |
+| --------------------------- | ------------------------------------------------- |
+| `smoke.spec.ts`             | All 3 endpoints return 200 within SLA             |
+| `widget-config.spec.ts`     | Zod schema, HTTPS URL, CDN response time          |
+| `callback24.spec.ts`        | Schema, brand data, negative (invalid service ID) |
+| `brand-consistency.spec.ts` | SK and EN locales return identical brand data     |
 
-```
-test.spec.ts
-  └── HomePage      → goto(), acceptCookies(), navigateToPhones()
-  └── PhonesPage    → sortBy(), selectTariff(), clickPhone()
-  └── ProductPage   → verifyLoaded(), verifyPrice(), addToCart()
-  └── CartPage      → selectElectronicSIM(), addServices(), continue()
-  └── CheckoutPage  → fillPersonalDetails(), submit()
-```
+**Postman (`api-tests/postman/`)**
 
-Selektory a akcie sú zapuzdrené v triedach — `test.spec.ts` obsahuje len business logiku. Test dáta (zákazník, produkt, tarif) sú centralizované v `data/testData.ts`.
-
-### Timeouty (`playwright.config.ts`)
-
-| | |
-|---|---|
-| Test celkovo | 120 000 ms |
-| Každá akcia | 15 000 ms |
-| Navigácia | 30 000 ms |
-
----
-
-## API testy (Postman)
-
-Endpointy boli zdokumentované z HAR zachytenia reálnej prevádzky — Swagger pre túto časť webu jednoducho neexistuje.
-
-### Pokryté endpointy
-
-| Endpoint | Popis |
-|----------|-------|
-| `GET /fileadmin/genesys/widget-config-prod.json` | konfigurácia Genesys widgetu |
-| `GET /fileadmin/genesys/widgets-sk.i18n.json` | i18n preklady |
-| `GET srv-e01.callback24.io/.../ESHOP-TELEFONY1/EN` | stav Callback24 služby |
-
-Kolekcia má 8 requestov: `[SMOKE]` dostupnosť, `[FUNC+DATA]` obsah a formáty, `[PERF]` SLA limity, `[NEG]` chybové stavy.
-
-### Spustenie cez Newman
-
-```bash
-npm install -g newman
-newman run api-tests/collections/orange-sk-eshop.postman_collection.json \
-  -e api-tests/environments/production.postman_environment.json
-```
-
----
+Same endpoints, 9 requests split into `[SMOKE]`, `[FUNC+DATA]`, `[PERF]`, `[NEG]` categories.
 
 ## Known issues
 
-**Livewire filtre (E2E)** — zoradenie a výber paušálu triggerujú AJAX cez Livewire. Po každej zmene treba `waitForLoadState('networkidle')` + `waitForTimeout(2000)`, inak testy občas failujú na race condition.
+**DEFECT CB24-001** — Callback24 returns HTTP 200 for a non-existent service ID but the `status` field is missing instead of being `false`. Vendor-side bug, documented in the negative test.
 
-**Selectize dropdowns (E2E)** — polia pre mesto a ulicu nie sú štandardné `<select>`. Funguje `.selectize-control input[type="text"]` + `type({ delay: 150 })` kvôli spoľahlivému triggrovaniu autocomplete.
+`POST /e-shop/livewire/update` is not covered — requires a CSRF token from a live session.
 
-**Cookie banner (E2E)** — text tlačidla sa líši podľa A/B testu, riešené cez `Promise.race()` s viacerými kandidátmi.
+## CI
 
-**Dynamické ceny (E2E)** — závisí od zvoleného paušálu, preto overujem len formát `/\d+\s*€/`.
-
-**DEFECT CB24-001 (API)** — Callback24 vracia HTTP 200 pre neexistujúci service ID, ale pole `status` v odpovedi chýba namiesto `false`. Test to loguje ako `console.warn` a nepretrhne pipeline. Chyba je na strane vendora.
-
-`POST /e-shop/livewire/update` nie je pokrytý — vyžaduje CSRF token zo živej session.
-
----
-
-Juraj Kapušanský — QA Automation Engineer
+Runs on every push and PR. Scheduled daily at 07:00 on weekdays to catch overnight regressions.
