@@ -9,27 +9,62 @@ on:
     - cron: "0 7 * * 1-5"
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  api-tests:
-    name: Run API Tests
+  smoke:
+    name: Smoke
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Run tests
+      - run: npx playwright install chromium --with-deps
+
+      - name: Run smoke tests
         env:
-          BASE_URL: "https://www.orange.sk"
+          ORANGE_BASE_URL: "https://www.orange.sk"
+          CALLBACK24_URL: "https://srv-e01.callback24.io"
+          CALLBACK24_SERVICE_ID: "ESHOP-TELEFONY1"
+        run: npx playwright test api-tests/playwright/tests/smoke.spec.ts
+
+  regression:
+    name: Regression
+    needs: smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: npx playwright install chromium --with-deps
+
+      - name: Run regression tests
+        env:
+          ORANGE_BASE_URL: "https://www.orange.sk"
           CALLBACK24_URL: "https://srv-e01.callback24.io"
           CALLBACK24_SERVICE_ID: "ESHOP-TELEFONY1"
         run: npm test
+
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
