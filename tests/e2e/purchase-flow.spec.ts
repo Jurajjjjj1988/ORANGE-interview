@@ -1,10 +1,10 @@
 import { test } from '@playwright/test';
-import { HomePage } from './pages/HomePage';
-import { PhonesPage } from './pages/PhonesPage';
-import { ProductPage } from './pages/ProductPage';
-import { CartPage } from './pages/CartPage';
-import { CheckoutPage } from './pages/CheckoutPage';
-import { CUSTOMERS, PHONES, TARIFFS } from './data/testData';
+import { HomePage } from '../pages/HomePage';
+import { PhonesPage } from '../pages/PhonesPage';
+import { ProductPage } from '../pages/ProductPage';
+import { CartPage } from '../pages/CartPage';
+import { CheckoutPage } from '../pages/CheckoutPage';
+import { CUSTOMERS, PHONES, TARIFFS } from '../data/testData';
 
 test.describe('Orange SK - nákupný flow', () => {
   test.beforeEach(async ({ page }) => {

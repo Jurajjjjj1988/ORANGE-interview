@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { HomePage } from './pages/HomePage';
-import { ChatPage } from './pages/ChatPage';
+import { ChatPage } from '../pages/ChatPage';
 
 const CHAT_USER = { name: 'Test User', phone: '0900123456' };
 
