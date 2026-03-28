@@ -1,12 +1,10 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  testDir: './tests',
-  timeout: 120000,
-  retries: 1,
+  testDir: "./api-tests/playwright/tests",
+  timeout: 10000,
+  reporter: "list",
   use: {
-    actionTimeout: 15000,
-    navigationTimeout: 30000,
-    viewport: { width: 1280, height: 900 },
+    baseURL: process.env.ORANGE_BASE_URL || "https://www.orange.sk",
   },
 });

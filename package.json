@@ -1,17 +1,14 @@
 {
   "name": "orange-test-suite",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "API test suite for orange.sk — Playwright API tests + Postman collection",
   "scripts": {
     "test": "playwright test",
-    "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed"
+    "test:postman": "newman run api-tests/postman/collections/orange-sk-eshop.postman_collection.json -e api-tests/postman/environments/production.postman_environment.json"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "Orange.sk security test suite - BUG-004 HTTP downgrade vulnerability tests",
   "devDependencies": {
-    "@playwright/test": "^1.58.2"
+    "@playwright/test": "^1.52.0",
+    "zod": "^3.23.0",
+    "typescript": "^5.4.0"
   }
 }
